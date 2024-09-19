@@ -1,0 +1,36 @@
+name: Deploy FastAPI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest
+
+      - name: Deploy to server
+        run: |
+          # Ajoutez les commandes pour déployer votre image Docker sur votre serveur
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest && docker run -d -p 8001:8001 ${{ secrets.DOCKER_USERNAME }}/fastapi-app:latest"
